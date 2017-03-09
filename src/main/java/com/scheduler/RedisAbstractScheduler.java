@@ -3,7 +3,6 @@ package com.scheduler;
 import com.downloader.Request;
 import com.downloader.encrypt.EncryptLib;
 import com.duplicate.DuplicateRemover;
-import com.google.gson.Gson;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import redis.clients.jedis.Jedis;
@@ -19,7 +18,6 @@ import java.util.Collection;
 public abstract class RedisAbstractScheduler extends DuplicateRemoverScheduler implements DuplicateRemover<Request> {
     private JedisPool pool;
     protected static final Logger LOGGER = Logger.getLogger(RedisAbstractScheduler.class);
-    protected static final Gson GSON = new Gson();
     private String requestSet;
     private String requestQueue;
 
