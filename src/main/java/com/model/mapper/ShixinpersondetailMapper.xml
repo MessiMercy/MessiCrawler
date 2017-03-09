@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.model.inter.ShixinpersondetailMapper">
+    <resultMap id="BaseResultMap" type="com.model.Shixinpersondetail">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="iname" jdbcType="VARCHAR" property="iname"/>
+        <result column="caseCode" jdbcType="VARCHAR" property="casecode"/>
+        <result column="age" jdbcType="INTEGER" property="age"/>
+        <result column="sexy" jdbcType="VARCHAR" property="sexy"/>
+        <result column="cardNum" jdbcType="VARCHAR" property="cardnum"/>
+        <result column="courtName" jdbcType="VARCHAR" property="courtname"/>
+        <result column="areaName" jdbcType="VARCHAR" property="areaname"/>
+        <result column="partyTypeName" jdbcType="INTEGER" property="partytypename"/>
+        <result column="gistId" jdbcType="VARCHAR" property="gistid"/>
+        <result column="regDate" jdbcType="VARCHAR" property="regdate"/>
+        <result column="gistUnit" jdbcType="VARCHAR" property="gistunit"/>
+        <result column="duty" jdbcType="VARCHAR" property="duty"/>
+        <result column="performance" jdbcType="VARCHAR" property="performance"/>
+        <result column="disruptTypeName" jdbcType="VARCHAR" property="disrupttypename"/>
+        <result column="publishDate" jdbcType="VARCHAR" property="publishdate"/>
+        <association property="shixinmodel" javaType="com.model.ShiXinModel">
+            <id property="id" column="id"/>
+            <result property="name" column="name"/>
+            <result property="verifyNum" column="verifyNum"/>
+            <result property="peopleOrCompany" column="peopleOrCompany"/>
+        </association>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, iname, caseCode, age, sexy, cardNum, courtName, areaName, partyTypeName, gistId, 
+    regDate, gistUnit, duty, performance, disruptTypeName, publishDate
+    </sql>
+    <select id="selectShiXin" parameterType="string" resultMap="BaseResultMap">
+        SELECT * FROM  shixinpersondetail,shixin WHERE shixin.name=shixinpersondetail.iname AND shixinpersondetail.iname=#{name}
+    </select>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from shixinpersondetail
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from shixinpersondetail
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+    <insert id="insert" parameterType="com.model.Shixinpersondetail">
+    insert into shixinpersondetail (id, iname, caseCode, 
+      age, sexy, cardNum, 
+      courtName, areaName, partyTypeName, 
+      gistId, regDate, gistUnit, 
+      duty, performance, disruptTypeName, 
+      publishDate)
+    values (#{id,jdbcType=INTEGER}, #{iname,jdbcType=VARCHAR}, #{casecode,jdbcType=VARCHAR}, 
+      #{age,jdbcType=INTEGER}, #{sexy,jdbcType=VARCHAR}, #{cardnum,jdbcType=VARCHAR}, 
+      #{courtname,jdbcType=VARCHAR}, #{areaname,jdbcType=VARCHAR}, #{partytypename,jdbcType=INTEGER}, 
+      #{gistid,jdbcType=VARCHAR}, #{regdate,jdbcType=VARCHAR}, #{gistunit,jdbcType=VARCHAR}, 
+      #{duty,jdbcType=VARCHAR}, #{performance,jdbcType=VARCHAR}, #{disrupttypename,jdbcType=VARCHAR}, 
+      #{publishdate,jdbcType=VARCHAR})
+  </insert>
+    <insert id="insertSelective" parameterType="com.model.Shixinpersondetail">
+        insert into shixinpersondetail
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="iname != null">
+                iname,
+            </if>
+            <if test="casecode != null">
+                caseCode,
+            </if>
+            <if test="age != null">
+                age,
+            </if>
+            <if test="sexy != null">
+                sexy,
+            </if>
+            <if test="cardnum != null">
+                cardNum,
+            </if>
+            <if test="courtname != null">
+                courtName,
+            </if>
+            <if test="areaname != null">
+                areaName,
+            </if>
+            <if test="partytypename != null">
+                partyTypeName,
+            </if>
+            <if test="gistid != null">
+                gistId,
+            </if>
+            <if test="regdate != null">
+                regDate,
+            </if>
+            <if test="gistunit != null">
+                gistUnit,
+            </if>
+            <if test="duty != null">
+                duty,
+            </if>
+            <if test="performance != null">
+                performance,
+            </if>
+            <if test="disrupttypename != null">
+                disruptTypeName,
+            </if>
+            <if test="publishdate != null">
+                publishDate,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="iname != null">
+                #{iname,jdbcType=VARCHAR},
+            </if>
+            <if test="casecode != null">
+                #{casecode,jdbcType=VARCHAR},
+            </if>
+            <if test="age != null">
+                #{age,jdbcType=INTEGER},
+            </if>
+            <if test="sexy != null">
+                #{sexy,jdbcType=VARCHAR},
+            </if>
+            <if test="cardnum != null">
+                #{cardnum,jdbcType=VARCHAR},
+            </if>
+            <if test="courtname != null">
+                #{courtname,jdbcType=VARCHAR},
+            </if>
+            <if test="areaname != null">
+                #{areaname,jdbcType=VARCHAR},
+            </if>
+            <if test="partytypename != null">
+                #{partytypename,jdbcType=INTEGER},
+            </if>
+            <if test="gistid != null">
+                #{gistid,jdbcType=VARCHAR},
+            </if>
+            <if test="regdate != null">
+                #{regdate,jdbcType=VARCHAR},
+            </if>
+            <if test="gistunit != null">
+                #{gistunit,jdbcType=VARCHAR},
+            </if>
+            <if test="duty != null">
+                #{duty,jdbcType=VARCHAR},
+            </if>
+            <if test="performance != null">
+                #{performance,jdbcType=VARCHAR},
+            </if>
+            <if test="disrupttypename != null">
+                #{disrupttypename,jdbcType=VARCHAR},
+            </if>
+            <if test="publishdate != null">
+                #{publishdate,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.model.Shixinpersondetail">
+        update shixinpersondetail
+        <set>
+            <if test="iname != null">
+                iname = #{iname,jdbcType=VARCHAR},
+            </if>
+            <if test="casecode != null">
+                caseCode = #{casecode,jdbcType=VARCHAR},
+            </if>
+            <if test="age != null">
+                age = #{age,jdbcType=INTEGER},
+            </if>
+            <if test="sexy != null">
+                sexy = #{sexy,jdbcType=VARCHAR},
+            </if>
+            <if test="cardnum != null">
+                cardNum = #{cardnum,jdbcType=VARCHAR},
+            </if>
+            <if test="courtname != null">
+                courtName = #{courtname,jdbcType=VARCHAR},
+            </if>
+            <if test="areaname != null">
+                areaName = #{areaname,jdbcType=VARCHAR},
+            </if>
+            <if test="partytypename != null">
+                partyTypeName = #{partytypename,jdbcType=INTEGER},
+            </if>
+            <if test="gistid != null">
+                gistId = #{gistid,jdbcType=VARCHAR},
+            </if>
+            <if test="regdate != null">
+                regDate = #{regdate,jdbcType=VARCHAR},
+            </if>
+            <if test="gistunit != null">
+                gistUnit = #{gistunit,jdbcType=VARCHAR},
+            </if>
+            <if test="duty != null">
+                duty = #{duty,jdbcType=VARCHAR},
+            </if>
+            <if test="performance != null">
+                performance = #{performance,jdbcType=VARCHAR},
+            </if>
+            <if test="disrupttypename != null">
+                disruptTypeName = #{disrupttypename,jdbcType=VARCHAR},
+            </if>
+            <if test="publishdate != null">
+                publishDate = #{publishdate,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.model.Shixinpersondetail">
+    update shixinpersondetail
+    set iname = #{iname,jdbcType=VARCHAR},
+      caseCode = #{casecode,jdbcType=VARCHAR},
+      age = #{age,jdbcType=INTEGER},
+      sexy = #{sexy,jdbcType=VARCHAR},
+      cardNum = #{cardnum,jdbcType=VARCHAR},
+      courtName = #{courtname,jdbcType=VARCHAR},
+      areaName = #{areaname,jdbcType=VARCHAR},
+      partyTypeName = #{partytypename,jdbcType=INTEGER},
+      gistId = #{gistid,jdbcType=VARCHAR},
+      regDate = #{regdate,jdbcType=VARCHAR},
+      gistUnit = #{gistunit,jdbcType=VARCHAR},
+      duty = #{duty,jdbcType=VARCHAR},
+      performance = #{performance,jdbcType=VARCHAR},
+      disruptTypeName = #{disrupttypename,jdbcType=VARCHAR},
+      publishDate = #{publishdate,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.model.inter.ISimpleCompanyInfoOperation">
+    <select id="selectCompanyByID" parameterType="int" resultType="SimpleCompanyInfo">
+        select * from `SimpleCompanyInfo` where companyId = #{companyId}
+    </select>
+    <!-- <select id="selectPosition" parameterType="string" resultMap="resultListUser">
+        select * from SimpleCompanyInfo where companyName like #{companyName}
+    </select>
+    <resultMap type="User" id="resultListUser">
+    	<id column="id" property="id"/>
+    	<result column="userName" property="userName"/>
+    	<result column="userAge" property="userAge"/>
+    	<result column="userAddress" property="userAddress"/>
+    </resultMap> -->
+    <insert id="addCompany" parameterType="SimpleCompanyInfo" useGeneratedKeys="false" keyProperty="companyId">
+    insert into SimpleCompanyInfo (companyId,detailAddress,companySize,companyProfile,lastLoginTime,industryField,positionCount,city,resumeProcessRate,resumeProcessTime,experienceCount,financeStage) values(#{companyId},#{detailAddress},#{companySize},#{companyProfile},#{lastLoginTime},#{industryField},#{positionCount},#{city},#{resumeProcessRate},#{resumeProcessTime},#{experienceCount},#{financeStage})
+      </insert>
+    <!-- <update id="updatePosition" parameterType="SimpleCompanyInfo">
+    	update SimpleCompanyInfo set userName=#{userName},userAge=#{userAge},userAddress=#{userAddress} where id=#{id}
+    </update> -->
+    <delete id="deleteSimpleCompanyInfo" parameterType="int">
+    	delete from SimpleCompanyInfo where companyId=#{companyId}
+    </delete>
+</mapper>

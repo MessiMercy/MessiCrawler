@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+        <typeAlias alias="SimplePositionInfo" type="com.model.SimplePositionInfo"/>
+        <typeAlias alias="SimpleCompanyInfo" type="com.model.SimpleCompanyInfo"/>
+        <typeAlias alias="SimpleInterviewExperiences" type="com.model.SimpleInterviewExperiences"/>
+        <typeAlias type="com.model.ShiXinModel" alias="ShiXinModel"/>
+        <typeAlias type="com.model.Test" alias="Test"/>
+        <typeAlias type="com.model.Shixincompanydetail" alias="shixinCompanyDetail"/>
+        <typeAlias type="com.model.Shixinpersondetail" alias="shixinPersonDetail"/>
+    </typeAliases>
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://127.0.0.1:3306/crawl?useSSL=true"/>
+                <property name="username" value="root"/>
+                <property name="password" value="liu920923"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="com/model/mapper/SimplePositionInfo.xml"/>
+        <mapper resource="com/model/mapper/SimpleInterviewExperiences.xml"/>
+        <mapper resource="com/model/mapper/SimpleCompanyInfo.xml"/>
+        <mapper resource="com/model/mapper/ShiXinModel.xml"/>
+        <mapper resource="com/model/mapper/TestMapper.xml"/>
+        <mapper resource="com/model/mapper/ShixinpersondetailMapper.xml"/>
+        <mapper resource="com/model/mapper/ShixincompanydetailMapper.xml"/>
+        <mapper resource="com/model/mapper/ShiXinModelPageMapper.xml"/>
+    </mappers>
+</configuration>
