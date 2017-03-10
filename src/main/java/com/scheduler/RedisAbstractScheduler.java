@@ -17,7 +17,7 @@ import java.util.Collection;
  */
 public abstract class RedisAbstractScheduler extends DuplicateRemoverScheduler implements DuplicateRemover<Request> {
     private JedisPool pool;
-    protected static final Logger LOGGER = Logger.getLogger(RedisAbstractScheduler.class);
+    private static final Logger LOGGER = Logger.getLogger(RedisAbstractScheduler.class);
     private String requestSet;
     private String requestQueue;
 

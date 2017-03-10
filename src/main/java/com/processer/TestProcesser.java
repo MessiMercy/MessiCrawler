@@ -8,6 +8,7 @@ import com.parser.Html;
 import com.pipeline.Filepipeline;
 import com.pipeline.impl.SimpleFilepipeline;
 import com.processer.inter.Processer;
+import com.scheduler.RedisAbstractScheduler;
 import com.scheduler.RedisScheduler;
 import com.scheduler.inter.Scheduler;
 import redis.clients.jedis.JedisPool;
@@ -27,7 +28,7 @@ public class TestProcesser implements Processer {
         JedisPoolConfig config = new JedisPoolConfig();
         config.setMaxTotal(10000);
         JedisPool pool = new JedisPool(config, "127.0.0.1", 6379);
-        RedisScheduler scheduler = new RedisScheduler(pool);
+        RedisAbstractScheduler scheduler = new RedisScheduler(pool);
         Spider downjoySpider = new Spider(pp);
         downjoySpider.setScheduler(scheduler);
         downjoySpider.setThreadNum(2);

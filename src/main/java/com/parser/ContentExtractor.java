@@ -229,7 +229,9 @@ public class ContentExtractor {
         try {
             return getDate(contentElement);
         } catch (Exception ex) {
-            throw new Exception("time not found");
+//            throw new Exception("time not found");
+            LOG.info("time not found");
+            return "time not found";
         }
 
     }

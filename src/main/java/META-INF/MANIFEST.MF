@@ -1,59 +1,93 @@
 Manifest-Version: 1.0
-Class-Path: lib\selenium-server-2.39.0.jar lib\jetty-util-8.1.15.v2014
- 0411.jar lib\jsoup-1.9.2.jar lib\hibernate-infinispan-5.2.4.Final.jar
-  lib\jetty-io-8.1.15.v20140411.jar lib\mchange-commons-java-0.2.3.4.j
- ar lib\netlib-native_ref-win-i686-1.1-natives.jar lib\hibernate-entit
- ymanager-5.2.4.Final.jar lib\libsvm-3.17.jar lib\nekohtml-1.9.21.jar 
- lib\netlib-native_system-linux-x86_64-1.1-natives.jar lib\jboss-marsh
- alling-osgi-1.4.10.Final.jar lib\netlib-java-1.1.jar lib\cssparser-0.
- 9.14.jar lib\proxool-0.8.3.jar lib\mtj-1.0.4.jar lib\java-cup-11b-201
- 5.03.26.jar lib\bson-3.4.1.jar lib\httpcore-4.4.4.jar lib\snakeyaml-1
- .8.jar lib\hibernate-core-5.2.4.Final.jar lib\netlib-native_ref-linux
- -x86_64-1.1-natives.jar lib\hibernate-ehcache-5.2.4.Final.jar lib\hib
- ernate-c3p0-5.2.4.Final.jar lib\org.osgi.core-4.3.1.jar lib\jxl-2.6.1
- 2.jar lib\native_ref-java-1.1.jar lib\netlib-native_system-linux-i686
- -1.1-natives.jar lib\cdi-api-1.1.jar lib\commons-pool2-2.4.2.jar lib\
- netlib-native_system-osx-x86_64-1.1-natives.jar lib\jsr250-api-1.0.ja
- r lib\commons-lang3-3.3.2.jar lib\jetty-repacked-7.6.1.jar lib\common
- s-collections-3.2.1.jar lib\selenium-support-2.45.0.jar lib\dom4j-1.6
- .1.jar lib\core-1.1.jar lib\antlr-2.7.7.jar lib\shiXinOcr.jar lib\web
- p-imageio.jar lib\hibernate-jpa-2.1-api-1.0.0.Final.jar lib\netlib-na
- tive_system-win-i686-1.1-natives.jar lib\cglib-nodep-2.1_3.jar lib\hi
- bernate-commons-annotations-5.0.1.Final.jar lib\org.osgi.compendium-4
- .3.1.jar lib\commons-logging-1.2.jar lib\commons-lang-2.6.jar lib\inf
- inispan-commons-8.2.3.Final.jar lib\netlib-native_ref-linux-armhf-1.1
- -natives.jar lib\jcip-annotations-1.0.jar lib\xalan-2.7.1.jar lib\htm
- lunit-core-js-2.15.jar lib\hibernate-osgi-5.2.4.Final.jar lib\gson-2.
- 6.2.jar lib\native_system-java-1.1.jar lib\java-cup-11b-runtime-2015.
- 03.26.jar lib\netlib-native_system-win-x86_64-1.1-natives.jar lib\jbo
- ss-transaction-api_1.1_spec-1.0.1.Final.jar lib\slf4j-api-1.7.7.jar l
- ib\htmlunit-2.15.jar lib\arpack_combined_all-0.1.jar lib\commons-io-2
- .4.jar lib\mongodb-driver-core-3.4.1.jar lib\jniloader-1.1.jar lib\we
- ka-dev-3.9.1.jar lib\selenium-api-2.45.0.jar lib\jandex-2.0.0.Final.j
- ar lib\infinispan-core-8.2.3.Final.jar lib\netlib-native_ref-osx-x86_
- 64-1.1-natives.jar lib\netlib-native_ref-linux-i686-1.1-natives.jar l
- ib\bounce-0.18.jar lib\netlib-native_ref-win-x86_64-1.1-natives.jar l
- ib\mongodb-driver-3.4.1.jar lib\javassist-3.20.0-GA.jar lib\selenium-
- common-2.0b1.jar lib\selenium-remote-driver-2.45.0.jar lib\jedis-2.9.
- 0.jar lib\httpclient-4.5.2.jar lib\classmate-1.3.0.jar lib\servlet-ap
- i-2.5-6.1.9.jar lib\httpmime-4.3.3.jar lib\mybatis-3.2.8.jar lib\LibS
- VM-1.0.10.jar lib\el-api-2.2.jar lib\xercesImpl-2.11.0.jar lib\jgroup
- s-3.6.7.Final.jar lib\selenium-java-2.45.0.jar lib\hibernate-envers-5
- .2.4.Final.jar lib\mybatis-generator-core-1.3.5.jar lib\groovy-all-2.
- 4.6.jar lib\selenium-leg-rc-2.45.0.jar lib\platform-3.4.0.jar lib\jbo
- ss-logging-3.3.0.Final.jar lib\mysql-connector-java-5.1.39.jar lib\fi
- lters-2.0.235-1.jar lib\commons-exec-1.1.jar lib\hibernate-proxool-5.
- 2.4.Final.jar lib\bcpkix-jdk15on-1.48.jar lib\jetty-http-8.1.15.v2014
- 0411.jar lib\jetty-websocket-8.1.15.v20140411.jar lib\selenium-safari
- -driver-2.45.0.jar lib\selenium-firefox-driver-2.45.0.jar lib\ehcache
- -2.10.3.jar lib\mx4j-tools-3.0.1.jar lib\commons-codec-1.9.jar lib\ne
- tty-3.5.2.Final.jar lib\javax.inject-1.jar lib\guava-19.0.jar lib\ser
- ializer-2.7.1.jar lib\geronimo-jta_1.1_spec-1.1.1.jar lib\jna-3.4.0.j
- ar lib\bcprov-jdk15on-1.48.jar lib\selenium-ie-driver-2.45.0.jar lib\
- netlib-native_system-linux-armhf-1.1-natives.jar lib\xml-apis-1.4.01.
- jar lib\selenium-htmlunit-driver-2.45.0.jar lib\phantomjsdriver-1.1.0
- .jar lib\log4j-1.2.17.jar lib\c3p0-0.9.2.1.jar lib\jboss-interceptors
- -api_1.1_spec-1.0.0.Beta1.jar lib\sac-1.3.jar lib\webbit-0.4.14.jar l
- ib\selenium-chrome-driver-2.45.0.jar lib\juniversalchardet-1.0.3.jar
-Main-Class: com.processer.WenshuProcesser
+Class-Path: Lib\c3p0-0.9.2.1.jar Lib\jboss-marshalling-osgi-1.4.10.Fin
+ al.jar Lib\lucene-suggest-6.4.0.jar Lib\platform-3.4.0.jar Lib\seleni
+ um-server-2.39.0.jar Lib\lucene-spatial-6.4.0.jar Lib\httpclient-4.5.
+ 2.jar Lib\servlet-api-2.5-6.1.9.jar Lib\netty-transport-4.1.7.Final.j
+ ar Lib\selenium-ie-driver-2.45.0.jar Lib\javax.inject-1.jar Lib\selen
+ ium-leg-rc-2.45.0.jar Lib\mongo-java-driver-3.4.2.jar Lib\lucene-quer
+ ies-6.4.0.jar Lib\xercesImpl-2.11.0.jar Lib\sac-1.3.jar Lib\jetty-web
+ socket-8.1.15.v20140411.jar Lib\netty-3.5.2.Final.jar Lib\hibernate-c
+ ommons-annotations-5.0.1.Final.jar Lib\xalan-2.7.1.jar Lib\mtj-1.0.4.
+ jar Lib\hibernate-jpa-2.1-api-1.0.0.Final.jar Lib\selenium-common-2.0
+ b1.jar Lib\mongodb-driver-3.4.1.jar Lib\jetty-io-8.1.15.v20140411.jar
+  Lib\commons-logging-1.2.jar Lib\securesm-1.1.jar Lib\netty-handler-4
+ .1.7.Final.jar Lib\log4j-1.2.17.jar Lib\lucene-queryparser-6.4.0.jar 
+ Lib\netlib-native_ref-linux-i686-1.1-natives.jar Lib\jandex-2.0.0.Fin
+ al.jar Lib\netlib-native_system-linux-x86_64-1.1-natives.jar Lib\mcha
+ nge-commons-java-0.2.3.4.jar Lib\mysql-connector-java-5.1.39.jar Lib\
+ jniloader-1.1.jar Lib\httpcore-nio-4.4.5.jar Lib\cglib-nodep-2.1_3.ja
+ r Lib\selenium-api-2.45.0.jar Lib\hibernate-proxool-5.2.4.Final.jar L
+ ib\bcpkix-jdk15on-1.48.jar Lib\elasticsearch-5.2.0.jar Lib\jackson-co
+ re-2.8.6.jar Lib\jboss-logging-3.3.0.Final.jar Lib\transport-5.2.0.ja
+ r Lib\netlib-native_system-linux-armhf-1.1-natives.jar Lib\arpack_com
+ bined_all-0.1.jar Lib\commons-lang-2.6.jar Lib\transport-netty4-clien
+ t-5.2.0.jar Lib\classmate-1.3.0.jar Lib\jsr250-api-1.0.jar Lib\seleni
+ um-chrome-driver-2.45.0.jar Lib\netlib-native_system-linux-i686-1.1-n
+ atives.jar Lib\hibernate-osgi-5.2.4.Final.jar Lib\org.osgi.core-4.3.1
+ .jar Lib\el-api-2.2.jar Lib\commons-collections-3.2.1.jar Lib\hiberna
+ te-core-5.2.4.Final.jar Lib\jsoup-1.9.2.jar Lib\mybatis-3.2.8.jar Lib
+ \compiler-0.9.3.jar Lib\HdrHistogram-2.1.6.jar Lib\ant-1.9.4.jar Lib\
+ ant-antlr-1.9.4.jar Lib\ant-junit-1.9.4.jar Lib\ant-launcher-1.9.4.ja
+ r Lib\bsf-2.4.0.jar Lib\commons-cli-1.2.jar Lib\commons-logging-1.2.j
+ ar Lib\gpars-1.2.1.jar Lib\groovy-2.4.9.jar Lib\groovy-ant-2.4.9.jar 
+ Lib\groovy-bsf-2.4.9.jar Lib\groovy-console-2.4.9.jar Lib\groovy-docg
+ enerator-2.4.9.jar Lib\groovy-groovydoc-2.4.9.jar Lib\groovy-groovysh
+ -2.4.9.jar Lib\groovy-jmx-2.4.9.jar Lib\groovy-json-2.4.9.jar Lib\gro
+ ovy-jsr223-2.4.9.jar Lib\groovy-nio-2.4.9.jar Lib\groovy-servlet-2.4.
+ 9.jar Lib\groovy-sql-2.4.9.jar Lib\groovy-swing-2.4.9.jar Lib\groovy-
+ templates-2.4.9.jar Lib\groovy-test-2.4.9.jar Lib\groovy-testng-2.4.9
+ .jar Lib\groovy-xml-2.4.9.jar Lib\hamcrest-core-1.3.jar Lib\ivy-2.4.0
+ .jar Lib\jansi-1.11.jar Lib\jcommander-1.47.jar Lib\jline-2.12.jar Li
+ b\jsp-api-2.0.jar Lib\jsr166y-1.7.0.jar Lib\junit-4.12.jar Lib\multiv
+ erse-core-0.7.0.jar Lib\qdox-1.12.1.jar Lib\servlet-api-2.4.jar Lib\t
+ estng-6.8.13.jar Lib\xmlpull-1.1.3.1.jar Lib\xstream-1.4.7.jar Lib\ne
+ tlib-native_ref-win-i686-1.1-natives.jar Lib\webbit-0.4.14.jar Lib\hi
+ bernate-c3p0-5.2.4.Final.jar Lib\netty-buffer-4.1.7.Final.jar Lib\hib
+ ernate-entitymanager-5.2.4.Final.jar Lib\javassist-3.20.0-GA.jar Lib\
+ guava-19.0.jar Lib\lucene-spatial-extras-6.4.0.jar Lib\ehcache-2.10.3
+ .jar Lib\lang-mustache-client-5.2.0.jar Lib\lucene-backward-codecs-6.
+ 4.0.jar Lib\jetty-http-8.1.15.v20140411.jar Lib\snakeyaml-1.15.jar Li
+ b\infinispan-commons-8.2.3.Final.jar Lib\commons-lang3-3.0.jar Lib\cd
+ i-api-1.1.jar Lib\java-cup-11b-runtime-2015.03.26.jar Lib\jetty-util-
+ 8.1.15.v20140411.jar Lib\jopt-simple-5.0.2.jar Lib\lucene-sandbox-6.4
+ .0.jar Lib\dom4j-1.6.1.jar Lib\geronimo-jta_1.1_spec-1.1.1.jar Lib\jx
+ l-2.6.12.jar Lib\netlib-native_system-win-x86_64-1.1-natives.jar Lib\
+ netty-resolver-4.1.7.Final.jar Lib\commons-io-2.4.jar Lib\antlr-2.7.7
+ .jar Lib\commons-logging-1.2.jar Lib\proxool-0.8.3.jar Lib\core-1.1.j
+ ar Lib\jboss-interceptors-api_1.1_spec-1.0.0.Beta1.jar Lib\netlib-jav
+ a-1.1.jar Lib\commons-exec-1.1.jar Lib\selenium-remote-driver-2.45.0.
+ jar Lib\transport-netty3-client-5.2.0.jar Lib\lucene-spatial3d-6.4.0.
+ jar Lib\hibernate-ehcache-5.2.4.Final.jar Lib\netlib-native_ref-osx-x
+ 86_64-1.1-natives.jar Lib\htmlunit-core-js-2.15.jar Lib\native_ref-ja
+ va-1.1.jar Lib\gson-2.6.2.jar Lib\bson-3.4.1.jar Lib\jetty-repacked-7
+ .6.1.jar Lib\mx4j-tools-3.0.1.jar Lib\joda-time-2.9.5.jar Lib\seleniu
+ m-htmlunit-driver-2.45.0.jar Lib\slf4j-api-1.7.7.jar Lib\lucene-group
+ ing-6.4.0.jar Lib\commons-codec-1.9.jar Lib\selenium-firefox-driver-2
+ .45.0.jar Lib\serializer-2.7.1.jar Lib\weka-dev-3.9.1.jar Lib\lucene-
+ memory-6.4.0.jar Lib\libsvm-3.17.jar Lib\nekohtml-1.9.21.jar Lib\jcip
+ -annotations-1.0.jar Lib\bounce-0.18.jar Lib\shiXinOcr.jar Lib\webp-i
+ mageio.jar Lib\reindex-client-5.2.0.jar Lib\netlib-native_system-osx-
+ x86_64-1.1-natives.jar Lib\selenium-support-2.45.0.jar Lib\jackson-da
+ taformat-yaml-2.8.6.jar Lib\org.osgi.compendium-4.3.1.jar Lib\commons
+ -pool2-2.4.2.jar Lib\percolator-client-5.2.0.jar Lib\java-cup-11b-201
+ 5.03.26.jar Lib\hibernate-infinispan-5.2.4.Final.jar Lib\httpcore-4.4
+ .4.jar Lib\LibSVM-1.0.10.jar Lib\lucene-highlighter-6.4.0.jar Lib\net
+ lib-native_ref-linux-armhf-1.1-natives.jar Lib\log4j-api-2.7.jar Lib\
+ netty-codec-4.1.7.Final.jar Lib\netty-codec-http-4.1.7.Final.jar Lib\
+ jackson-dataformat-cbor-2.8.6.jar Lib\juniversalchardet-1.0.3.jar Lib
+ \jboss-transaction-api_1.1_spec-1.0.1.Final.jar Lib\lucene-misc-6.4.0
+ .jar Lib\log4j-core-2.7.jar Lib\netty-common-4.1.7.Final.jar Lib\cssp
+ arser-0.9.14.jar Lib\rest-5.2.0.jar Lib\netlib-native_ref-linux-x86_6
+ 4-1.1-natives.jar Lib\phantomjsdriver-1.1.0.jar Lib\selenium-safari-d
+ river-2.45.0.jar Lib\mybatis-generator-core-1.3.5.jar Lib\jackson-dat
+ aformat-smile-2.8.6.jar Lib\native_system-java-1.1.jar Lib\jgroups-3.
+ 6.7.Final.jar Lib\jna-3.4.0.jar Lib\lucene-core-6.4.0.jar Lib\bcprov-
+ jdk15on-1.48.jar Lib\netlib-native_system-win-i686-1.1-natives.jar Li
+ b\httpasyncclient-4.1.2.jar Lib\lucene-join-6.4.0.jar Lib\httpmime-4.
+ 3.3.jar Lib\filters-2.0.235-1.jar Lib\jedis-2.9.0.jar Lib\netlib-nati
+ ve_ref-win-x86_64-1.1-natives.jar Lib\infinispan-core-8.2.3.Final.jar
+  Lib\selenium-java-2.45.0.jar Lib\lucene-analyzers-common-6.4.0.jar L
+ ib\hibernate-envers-5.2.4.Final.jar Lib\xml-apis-1.4.01.jar Lib\t-dig
+ est-3.0.jar Lib\hppc-0.7.1.jar Lib\htmlunit-2.15.jar
+Main-Class: com.test.Test
 

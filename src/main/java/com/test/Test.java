@@ -1,6 +1,7 @@
 package com.test;
 
 import com.downloader.Downloader;
+import com.downloader.encrypt.EncryptLib;
 import com.google.gson.Gson;
 import com.proxy.IPModel;
 import jxl.Cell;
@@ -62,7 +63,14 @@ public class Test {
     }
 
     public static void main(String[] args) throws IOException, ParseException {
-        System.out.println(pool.getResource().llen("123"));
+        try {
+            String 么么哒 = EncryptLib.aesEncrypt("么么哒", "123456");
+            System.out.println(么么哒);
+            String s = EncryptLib.aesDecrypt(么么哒, "123456");
+            System.out.println(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static int partition(int[] ints, int left, int right) {

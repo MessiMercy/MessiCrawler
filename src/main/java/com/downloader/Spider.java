@@ -180,10 +180,10 @@ public class Spider implements Runnable {
             Request request = scheduler.poll();
             logger.info("scheduler size: " + scheduler.getSchedulerSize());
             if (request == null) {
-//                if (pool.getRunningThreads().get() == 0) {
-//                    break;
-//                }
+                long a = System.currentTimeMillis();
                 waitNewUrl();
+                long b = System.currentTimeMillis();
+                System.out.println(b - a);
                 if (scheduler.getSchedulerSize() <= 1 && pool.getRunningThreads().get() < 1) {
                     logger.info("所有任务已执行完毕！");
                     logger.info("共执行任务数: " + pageCount);
@@ -230,10 +230,11 @@ public class Spider implements Runnable {
         newUrlLock.lock();
         try {
             //double check
-            if (pool.getRunningThreads().get() == 0) {
-                return;
-            }
+            sleep(emptySleepTime);
             newUrlCondition.await(emptySleepTime, TimeUnit.SECONDS);
+//            if (pool.getRunningThreads().get() == 0) {
+//                return;
+//            }
         } catch (InterruptedException e) {
             logger.info("等待新url时中断错误");
             e.printStackTrace();
@@ -248,6 +249,14 @@ public class Spider implements Runnable {
             newUrlCondition.signalAll();
         } finally {
             newUrlLock.unlock();
+        }
+    }
+
+    private void sleep(long time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

@@ -45,4 +45,25 @@ public class Coder {
         sha.update(data);
         return sha.digest();
     }
+
+    /**
+     * aes加密
+     */
+    public static String encryptAES(String key, String pw) {
+        try {
+            return EncryptLib.aesEncrypt(key, pw);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String decryptAES(String content, String pw) {
+        try {
+            return EncryptLib.aesDecrypt(content, pw);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
