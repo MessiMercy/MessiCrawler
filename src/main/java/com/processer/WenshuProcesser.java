@@ -2,10 +2,7 @@ package com.processer;
 
 import com.Crawler.WenshuCrawler;
 import com.Ocr.WenshuOcr;
-import com.downloader.Downloader;
-import com.downloader.HttpConstant;
-import com.downloader.Request;
-import com.downloader.Response;
+import com.downloader.*;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -52,6 +49,7 @@ public class WenshuProcesser implements Processer {
     private int NetworkPort;
     private int ThreadNum;
     private boolean collectid;
+    private Spider spider;
 
     public WenshuProcesser() {
         downloader = new Downloader(HttpConstant.UserAgent.CHROME, false).setAutoSwitchProxy(AutoSwitchProxy);
@@ -340,6 +338,13 @@ public class WenshuProcesser implements Processer {
     @Override
     public boolean isNeedRetry(Response response) {
         return false;
+    }
+
+    @Override
+    public void stop() {
+        if (spider != null) {
+            spider.setStop(true);
+        }
     }
 
 

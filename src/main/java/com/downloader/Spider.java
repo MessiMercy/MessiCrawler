@@ -40,7 +40,7 @@ public class Spider implements Runnable {
      */
     private String seedUrlRegex;
     private int threadNum = 1;
-    private long delayTime = 500;
+    private long delayTime = 0;
     private int maxRetryTimes = 3;//默认最大重试次数为3
     private ExecutorService service;
     private Scheduler scheduler = new QueueScheduler();
@@ -60,6 +60,7 @@ public class Spider implements Runnable {
     private int emptySleepTime = 20;
     private Date startTime;
     private final Logger logger = Logger.getLogger(this.getClass());
+    private boolean stop = false;
 
     static {
         PropertyConfigurator.configure("log4j.properties");
@@ -176,7 +177,7 @@ public class Spider implements Runnable {
         processer.preprocess(this.downloader);
         setStartTime(new Date());
         logger.info("开始工作！");
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted() && !stop) {
             Request request = scheduler.poll();
             logger.info("scheduler size: " + scheduler.getSchedulerSize());
             if (request == null) {
@@ -185,11 +186,6 @@ public class Spider implements Runnable {
                 long b = System.currentTimeMillis();
                 System.out.println(b - a);
                 if (scheduler.getSchedulerSize() <= 1 && pool.getRunningThreads().get() < 1) {
-                    logger.info("所有任务已执行完毕！");
-                    logger.info("共执行任务数: " + pageCount);
-                    long spendTime = System.currentTimeMillis() - getStartTime().getTime();
-                    spendTime /= 1000;
-                    logger.info("总计耗时： " + (int) spendTime / 3600 + "小时 " + (int) spendTime / 60 % 60 + "分 " + (int) (spendTime % 60) + "秒");
                     break;//执行完任务自动终结
                 }
             } else {
@@ -208,18 +204,13 @@ public class Spider implements Runnable {
                 });
             }
         }
-        if (!service.isShutdown()) {
-            try {
-                boolean b = service.awaitTermination(1, TimeUnit.MINUTES);
-                if (!b) {
-                    List<Runnable> runnables = service.shutdownNow();
-                    System.out.println(runnables.size());
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            System.out.println("任务执行完毕,关闭service");
-        }
+        logger.info("所有任务已执行完毕！");
+        logger.info("共执行任务数: " + pageCount);
+        logger.info("还未完成的任务数: " + scheduler.getSchedulerSize());
+        long spendTime = System.currentTimeMillis() - getStartTime().getTime();
+        spendTime /= 1000;
+        logger.info("总计耗时： " + (int) spendTime / 3600 + "小时 " + (int) spendTime / 60 % 60 + "分 " + (int) (spendTime % 60) + "秒");
+        afterRun();
     }
 
     public int getThreadNum() {
@@ -240,6 +231,28 @@ public class Spider implements Runnable {
             e.printStackTrace();
         } finally {
             newUrlLock.unlock();
+        }
+    }
+
+    private void forceStop() {
+        this.stop = true;
+    }
+
+    private void afterRun() {
+        if (scheduler instanceof QueueScheduler && scheduler.getSchedulerSize() != 0) {
+            ((QueueScheduler) scheduler).toFile("unfinished.txt");
+        }
+        if (!service.isShutdown()) {
+            try {
+                logger.info("spider 将在1分钟内关闭");
+                boolean b = service.awaitTermination(1, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage());
+            } finally {
+                List<Runnable> runnables = service.shutdownNow();
+                logger.info("未完成任务数: " + runnables.size());
+            }
+            System.out.println("任务执行完毕,关闭service");
         }
     }
 
@@ -421,5 +434,13 @@ public class Spider implements Runnable {
 
     public void setRetryRequestCounter(AtomicInteger retryRequestCounter) {
         this.retryRequestCounter = retryRequestCounter;
+    }
+
+    public boolean isStop() {
+        return stop;
+    }
+
+    public void setStop(boolean stop) {
+        this.stop = stop;
     }
 }

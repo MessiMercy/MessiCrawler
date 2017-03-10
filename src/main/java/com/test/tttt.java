@@ -1,12 +1,18 @@
 package com.test;
 
-import java.io.UnsupportedEncodingException;
-
 /**
  * Created by Administrator on 2017/2/7.
  */
 public class tttt {
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        System.out.println(2001/20);
+    private String aaa = "1";
+
+    public tttt() {
+        aaa = "2";
+    }
+
+
+    public static void main(String[] args) {
+        tttt tttt = new tttt();
+        System.out.println(tttt.aaa);
     }
 }

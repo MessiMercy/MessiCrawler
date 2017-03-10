@@ -221,7 +221,7 @@ public class Downloader {
         try {
             Thread.sleep(getDelayTime());
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            result.setError("interrupt");
         }
         result.getRequest().setNeedRecycle(false);
         return result;

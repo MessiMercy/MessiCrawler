@@ -25,6 +25,7 @@ import java.io.Reader;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * sina news processer
@@ -38,24 +39,44 @@ public class SinaNewsProcesser extends RedisAbstractScheduler implements Process
     private MongoClient mongoClient = new MongoClient("127.0.0.1");
     private static JedisPool pool = new JedisPool("127.0.0.1");
     private MongoDatabase test = mongoClient.getDatabase("test");
+    private Spider spider = new Spider(this, 5).setScheduler(this).setNeedProxy(false).setMaxRetryTimes(3);
+    private Future<?> beforeExecute;
+    private String keyWord;
 
     public SinaNewsProcesser(JedisPool pool, String keyWord) {
         super(pool, keyWord);
+        this.keyWord = keyWord;
     }
 
     public static void main(String[] args) throws InterruptedException {
-        SinaNewsProcesser processer = new SinaNewsProcesser(pool, "");
-        processer.searchButton("三道堰");
+        SinaNewsProcesser processer = new SinaNewsProcesser(pool, "news");
+        int schedulerSize = processer.spider.getScheduler().getSchedulerSize();
+        System.out.println(processer.spider.getScheduler() == processer);
+        System.out.println(schedulerSize);
+        if (schedulerSize == 0) return;
+        processer.searchButton("金融");
+    }
+
+    @Override
+    public void stop() {
+        if (spider != null) {
+            spider.setStop(true);
+        }
+        if (beforeExecute != null) {
+            beforeExecute.cancel(true);
+        }
+        System.out.println("任务已取消!");
     }
 
 
     public void searchButton(String keyWord) {
-        SinaNewsProcesser processer = new SinaNewsProcesser(pool, "news");
-        service.submit(() -> processer.searchNews(pool, keyWord));
-        Spider spider = new Spider(processer, 5).setScheduler(processer).setNeedProxy(false).setMaxRetryTimes(3);
+        if (service.isTerminated()) {
+            service = Executors.newFixedThreadPool(10);
+        }
         spider.setService(service);
+        beforeExecute = service.submit(() -> searchNews(pool, keyWord));
         spider.run();
-        processer.resetDuplicateCheck();
+        resetDuplicateCheck();
         System.out.println("-------------------------end-------------------------");
     }
 
@@ -85,6 +106,12 @@ public class SinaNewsProcesser extends RedisAbstractScheduler implements Process
             request.setSleepTime(0);
             request.setTimeout(10 * 1000);
             Response process = dw.process(request);
+            if (process.getError() != null) {
+                if (process.getError().contains("interrupt")) {
+                    System.out.println("检测到人为中断,正在退出!");
+                    break;
+                }
+            }
             if (i == 1 && counter < 20) {
                 Regex regex = new Regex("\"count\":\"(\\d+)\"", process.getContent());
                 String s = regex.toList(1).get(0);
@@ -189,7 +216,7 @@ public class SinaNewsProcesser extends RedisAbstractScheduler implements Process
         }
         r.setSleepTime(0);
         r.addHeader(HttpConstant.Header.REFERER, "http://search.sina.com.cn/");
-        r.setTimeout(10 * 1000);
+        r.setTimeout(30 * 1000);
         return r;
     }
 

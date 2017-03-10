@@ -37,4 +37,6 @@ public interface Processer {
      * 根据返回的response决定此request是否需要重试
      */
     boolean isNeedRetry(Response response);
+
+    void stop();
 }

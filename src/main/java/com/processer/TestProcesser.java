@@ -22,6 +22,7 @@ import java.util.Collection;
  */
 public class TestProcesser implements Processer {
     Filepipeline filepipeline = new SimpleFilepipeline(new File("downjoy.txt"));
+    private static Spider downjoySpider;
 
     public static void main(String[] args) {
         TestProcesser pp = new TestProcesser();
@@ -29,7 +30,7 @@ public class TestProcesser implements Processer {
         config.setMaxTotal(10000);
         JedisPool pool = new JedisPool(config, "127.0.0.1", 6379);
         RedisAbstractScheduler scheduler = new RedisScheduler(pool);
-        Spider downjoySpider = new Spider(pp);
+        downjoySpider = new Spider(pp);
         downjoySpider.setScheduler(scheduler);
         downjoySpider.setThreadNum(2);
         downjoySpider.setAutoAddRequest(true).setSeedUrlRegex("http://android.d.cn/game/\\d+.html");
@@ -67,5 +68,12 @@ public class TestProcesser implements Processer {
     @Override
     public boolean isNeedRetry(Response response) {
         return false;
+    }
+
+    @Override
+    public void stop() {
+        if (downjoySpider != null) {
+            downjoySpider.setStop(true);
+        }
     }
 }
