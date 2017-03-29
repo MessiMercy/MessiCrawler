@@ -1,8 +1,11 @@
 package com.downloader;
 
 import com.downloader.thread.CountableThreadPool;
+import com.google.common.io.Files;
+import com.google.gson.Gson;
 import com.processer.inter.Processer;
 import com.scheduler.QueueScheduler;
+import com.scheduler.RedisAbstractScheduler;
 import com.scheduler.inter.Scheduler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.CookieStore;
@@ -10,8 +13,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import redis.clients.jedis.Jedis;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -177,6 +183,7 @@ public class Spider implements Runnable {
         processer.preprocess(this.downloader);
         setStartTime(new Date());
         logger.info("开始工作！");
+        beforeRun();
         while (!Thread.currentThread().isInterrupted() && !stop) {
             Request request = scheduler.poll();
             logger.info("scheduler size: " + scheduler.getSchedulerSize());
@@ -238,9 +245,45 @@ public class Spider implements Runnable {
         this.stop = true;
     }
 
+    private void beforeRun() {
+        if (this.scheduler instanceof QueueScheduler) {
+            File file = new File("unfinish.txt");
+            if (file.exists()) {
+                try {
+                    List<String> strings = Files.readLines(file, Charset.forName("utf-8"));
+                    Gson gson = new Gson();
+                    strings.forEach(p -> {
+                        Request request = gson.fromJson(p, Request.class);
+                        scheduler.push(request);
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else if (this.scheduler instanceof RedisAbstractScheduler) {
+            RedisAbstractScheduler absScheduler = (RedisAbstractScheduler) scheduler;
+            String requestQueue = absScheduler.getRequestQueue();
+            String unfinish = requestQueue + "_unfinish";
+            try (Jedis jedis = absScheduler.getPool().getResource()) {
+                if (jedis.exists(unfinish)) {
+                    jedis.sunionstore(requestQueue, requestQueue, unfinish);
+                }
+            }
+
+        }
+
+    }
+
     private void afterRun() {
         if (scheduler instanceof QueueScheduler && scheduler.getSchedulerSize() != 0) {
-            ((QueueScheduler) scheduler).toFile("unfinished.txt");
+            ((QueueScheduler) scheduler).toFile("unfinish.txt");
+        }
+        if (scheduler instanceof RedisAbstractScheduler && scheduler.getSchedulerSize() != 0) {
+            RedisAbstractScheduler absScheduler = (RedisAbstractScheduler) scheduler;
+            String unfinish = absScheduler.getRequestQueue() + "_unfinish";
+            try (Jedis jedis = absScheduler.getPool().getResource()) {
+                jedis.sunionstore(unfinish, absScheduler.getRequestQueue());
+            }
         }
         if (!service.isShutdown()) {
             try {
