@@ -241,8 +241,12 @@ public class Spider implements Runnable {
         }
     }
 
-    private void forceStop() {
+    private void stop() {
         this.stop = true;
+    }
+
+    public void start() {
+        this.processer.start();
     }
 
     private void beforeRun() {
