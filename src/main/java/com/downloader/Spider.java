@@ -3,6 +3,7 @@ package com.downloader;
 import com.downloader.thread.CountableThreadPool;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
+import com.parser.Html;
 import com.processer.inter.Processer;
 import com.scheduler.QueueScheduler;
 import com.scheduler.RedisAbstractScheduler;
@@ -11,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import redis.clients.jedis.Jedis;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,7 +47,11 @@ public class Spider implements Runnable {
     /**
      * 自动添加url时，regex不能为空
      */
+    @Deprecated
     private String seedUrlRegex;
+    //    private ArrayList<String> regexList = new ArrayList<>();
+    private ConcurrentHashMap<String, String> regexMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, String> selectorMap = new ConcurrentHashMap<>();
     private int threadNum = 1;
     private long delayTime = 0;
     private int maxRetryTimes = 3;//默认最大重试次数为3
@@ -53,7 +60,8 @@ public class Spider implements Runnable {
     private CountableThreadPool pool;
     private Processer processer;
     private Downloader downloader;
-    private HttpClient client;
+    //todo 实现adsl的下载器
+    private CloseableHttpClient client;
     private boolean isNeedProxy;
     private AtomicInteger retryRequestCounter = new AtomicInteger(0);
     private CookieStore store = new BasicCookieStore();
@@ -74,7 +82,7 @@ public class Spider implements Runnable {
 
     public Spider(Processer processer, int threadNum) {
         this.processer = processer;
-        this.threadNum = threadNum;
+        setThreadNum(threadNum);
         init();
     }
 
@@ -99,6 +107,7 @@ public class Spider implements Runnable {
             downloader.setClient(CrawlerLib.getInstanceClient());
         }
         downloader.setDelayTime(delayTime);
+        downloader.setAutoSwitchProxy(isNeedProxy);
     }
 
     /**
@@ -108,36 +117,73 @@ public class Spider implements Runnable {
      */
     private List<Request> getRequestFromResponse(Response response) {
         List<Request> resultList = new ArrayList<>();
-        Pattern pattern = Pattern.compile(seedUrlRegex);
-        Matcher matcher = pattern.matcher(response.getContent());
-        String oringnalUrl = response.getUrl();
-//        StringUtils.substringBetween(oringnalUrl, "//", "/");
-        Request request = response.getRequest();
-        while (matcher.find()) {
-            String seed = matcher.group();
-            if (!seed.startsWith("http") || seed.length() < 10) {
-                String host = request.getUrl();
-                int ii = host.indexOf("/", 10);
-                seed = host.substring(0, ii + 1) + seed;//针对无host的情况
-            }
-            Request newRequest = null;
-            try {
-                newRequest = (Request) request.deepClone();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            if (newRequest != null) {
-                newRequest.setUrl(seed);
-                if (newRequest.getUrl() != null) resultList.add(newRequest);
+        addRequestFromRegex(resultList, response);
+        addRequestFromSelector(resultList, response);
+        return resultList;
+    }
+
+    /**
+     * 从response中根据selector生成request
+     *
+     * @param collection 将生成的request传入此collection
+     */
+    private void addRequestFromSelector(Collection<Request> collection, Response response) {
+        Html html = new Html(response.getContent());
+        this.selectorMap.values().forEach(p -> {
+            String[] split = p.split(" ");
+            List<String> parse = html.parse(split[0], split[1]);
+            parse.forEach(v -> {
+                Request generated = generateRequest(v, response.getRequest());
+                collection.add(generated);
+            });
+        });
+    }
+
+    /**
+     * 从response中根据selector生成request
+     *
+     * @param collection 将生成的request传入此collection
+     */
+    private void addRequestFromRegex(Collection<Request> collection, Response response) {
+        for (String urlRegex : this.regexMap.values()) {
+            Pattern pattern = Pattern.compile(urlRegex);
+            Matcher matcher = pattern.matcher(response.getContent());
+            Request request = response.getRequest();
+            while (matcher.find()) {
+                String seed = matcher.group();
+                Request generated = generateRequest(seed, request);
+                collection.add(generated);
             }
         }
-        return resultList;
+    }
+
+    private Request generateRequest(String seed, Request template) {
+        if (!seed.startsWith("http") || seed.length() < 10) {
+            String url = template.getUrl();
+            int ii = url.indexOf("/", 10);
+            seed = url.substring(0, ii + 1) + seed;//针对无host的情况
+        }
+        Request newRequest = null;
+        try {
+            newRequest = (Request) template.deepClone();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        if (newRequest != null) {
+            newRequest.setUrl(seed);
+        }
+        return newRequest;
     }
 
     public Spider addRequest(Request... requests) {
         for (Request req : requests) {
             scheduler.push(req);
         }
+        return this;
+    }
+
+    public Spider addRegex(String tag, String regex) {
+        this.regexMap.put(tag, regex);
         return this;
     }
 
@@ -164,7 +210,7 @@ public class Spider implements Runnable {
             }//一旦队列里面超过20个需重试的url便忽略
         }
         processer.processResponse(response);
-        if (isAutoAddRequest && seedUrlRegex != null) {
+        if (isAutoAddRequest && !regexMap.isEmpty()) {
             List<Request> requests = getRequestFromResponse(response);
             addRequest(requests);
             processer.addRequests(scheduler, response);
@@ -182,7 +228,7 @@ public class Spider implements Runnable {
 //        init();
         processer.preprocess(this.downloader);
         setStartTime(new Date());
-        logger.info("开始工作！");
+        logger.info("准备开始工作！");
         beforeRun();
         while (!Thread.currentThread().isInterrupted() && !stop) {
             Request request = scheduler.poll();
@@ -191,7 +237,6 @@ public class Spider implements Runnable {
                 long a = System.currentTimeMillis();
                 waitNewUrl();
                 long b = System.currentTimeMillis();
-                System.out.println(b - a);
                 if (scheduler.getSchedulerSize() <= 1 && pool.getRunningThreads().get() < 1) {
                     break;//执行完任务自动终结
                 }
@@ -211,7 +256,7 @@ public class Spider implements Runnable {
                 });
             }
         }
-        logger.info("所有任务已执行完毕！");
+        logger.info("爬虫正在关闭！");
         logger.info("共执行任务数: " + pageCount);
         logger.info("还未完成的任务数: " + scheduler.getSchedulerSize());
         long spendTime = System.currentTimeMillis() - getStartTime().getTime();
@@ -241,12 +286,13 @@ public class Spider implements Runnable {
         }
     }
 
-    private void stop() {
+    public void stop() {
         this.stop = true;
     }
 
     public void start() {
-        this.processer.start();
+        this.stop = false;
+        this.run();
     }
 
     private void beforeRun() {
@@ -279,28 +325,28 @@ public class Spider implements Runnable {
     }
 
     private void afterRun() {
+        logger.info("spider 将在1分钟内关闭");
         if (scheduler instanceof QueueScheduler && scheduler.getSchedulerSize() != 0) {
             ((QueueScheduler) scheduler).toFile("unfinish.txt");
         }
-        if (scheduler instanceof RedisAbstractScheduler && scheduler.getSchedulerSize() != 0) {
-            RedisAbstractScheduler absScheduler = (RedisAbstractScheduler) scheduler;
-            String unfinish = absScheduler.getRequestQueue() + "_unfinish";
-            try (Jedis jedis = absScheduler.getPool().getResource()) {
-                jedis.sunionstore(unfinish, absScheduler.getRequestQueue());
-            }
-        }
+//        if (scheduler instanceof RedisAbstractScheduler && scheduler.getSchedulerSize() != 0) {
+//            RedisAbstractScheduler absScheduler = (RedisAbstractScheduler) scheduler;
+//            String unfinish = absScheduler.getRequestQueue() + "_unfinish";
+//            try (Jedis jedis = absScheduler.getPool().getResource()) {
+//                jedis.sunionstore(unfinish, absScheduler.getRequestQueue());
+//            }
+//        }
         if (!service.isShutdown()) {
             try {
-                logger.info("spider 将在1分钟内关闭");
                 boolean b = service.awaitTermination(1, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
                 logger.error(e.getMessage());
             } finally {
                 List<Runnable> runnables = service.shutdownNow();
-                logger.info("未完成任务数: " + runnables.size());
+                logger.info("被中断任务数: " + runnables.size());
             }
-            System.out.println("任务执行完毕,关闭service");
         }
+        logger.info("任务执行完毕,关闭service");
     }
 
     private void signalNewUrl() {
@@ -360,7 +406,7 @@ public class Spider implements Runnable {
         return client;
     }
 
-    public Spider setClient(HttpClient client) {
+    public Spider setClient(CloseableHttpClient client) {
         this.client = client;
         return this;
     }
@@ -398,6 +444,7 @@ public class Spider implements Runnable {
 
     public Spider setNeedProxy(boolean needProxy) {
         isNeedProxy = needProxy;
+        this.downloader.setAutoSwitchProxy(needProxy);
         return this;
     }
 
@@ -487,7 +534,12 @@ public class Spider implements Runnable {
         return stop;
     }
 
-    public void setStop(boolean stop) {
-        this.stop = stop;
+    public ConcurrentHashMap<String, String> getRegexMap() {
+        return regexMap;
     }
+
+    public ConcurrentHashMap<String, String> getSelectorMap() {
+        return selectorMap;
+    }
+
 }
