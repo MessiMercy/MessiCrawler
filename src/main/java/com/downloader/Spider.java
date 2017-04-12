@@ -1,545 +1,284 @@
 package com.downloader;
 
-import com.downloader.thread.CountableThreadPool;
-import com.google.common.io.Files;
+import com.downloader.HttpConstant.Method;
 import com.google.gson.Gson;
-import com.parser.Html;
-import com.processer.inter.Processer;
-import com.scheduler.QueueScheduler;
-import com.scheduler.RedisAbstractScheduler;
-import com.scheduler.inter.Scheduler;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-import redis.clients.jedis.Jedis;
+import com.model.Model;
+import org.apache.http.HttpHost;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
- * 爬虫核心类
- * Created by Administrator on 2016/10/20.
+ * 实现model接口，以集成深拷贝对象
  */
-public class Spider implements Runnable {
+public class Request implements Serializable, Model {
+    private String method = Method.GET;
+    private String url;
+    private List<BasicNameValuePair> formData = new ArrayList<>();
+    private String jsonPayload;
+    private Map<String, String> headers = new HashMap<>();
+    private String charset;
+    private Map<String, String> queryStringMap = new LinkedHashMap<>();
+    private boolean isNeedRecycle = false;
+    private long sleepTime = 0 * 1000;//默认等待时间
+    private int retryTimes = 0;
+    private int timeout = 2000;
+    private HttpHost proxy;
+    private boolean isAllowRedirect = true;
+    private String tag;
+    private String projectName;
+    private transient Gson gson = new Gson();
 
-    /**
-     * 设置是否自动往scheduler添加url
-     */
-    private boolean isAutoAddRequest;
-    /**
-     * 自动添加url时，regex不能为空
-     */
-    @Deprecated
-    private String seedUrlRegex;
-    //    private ArrayList<String> regexList = new ArrayList<>();
-    private ConcurrentHashMap<String, String> regexMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, String> selectorMap = new ConcurrentHashMap<>();
-    private int threadNum = 1;
-    private long delayTime = 0;
-    private int maxRetryTimes = 3;//默认最大重试次数为3
-    private ExecutorService service;
-    private Scheduler scheduler = new QueueScheduler();
-    private CountableThreadPool pool;
-    private Processer processer;
-    private Downloader downloader;
-    //todo 实现adsl的下载器
-    private CloseableHttpClient client;
-    private boolean isNeedProxy;
-    private AtomicInteger retryRequestCounter = new AtomicInteger(0);
-    private CookieStore store = new BasicCookieStore();
-    private AtomicLong pageCount = new AtomicLong(0);
-    private ReentrantLock newUrlLock = new ReentrantLock();
-    private Condition newUrlCondition = newUrlLock.newCondition();
-    /**
-     * 队列为空时等待的时间
-     */
-    private int emptySleepTime = 20;
-    private Date startTime;
-    private final Logger logger = Logger.getLogger(this.getClass());
-    private boolean stop = false;
-
-    static {
-        PropertyConfigurator.configure("log4j.properties");
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("-------------------------------------\r\n");
+        sb.append(method).append("\r\n");
+        sb.append(url).append("\r\n");
+        sb.append("isAllowRedirect: ").append(isAllowRedirect).append("\r\n");
+        if (queryStringMap != null) {
+            sb.append("Query String: \r\n");
+            Set<Entry<String, String>> set = queryStringMap.entrySet();
+            for (Entry<String, String> entry : set) {
+                sb.append(entry.getKey()).append(": ").append(entry.getValue()).append("\r\n");
+            }
+        }
+        if (headers != null) {
+            sb.append("Header: \r\n");
+            Set<Entry<String, String>> set = headers.entrySet();
+            for (Entry<String, String> entry : set) {
+                sb.append(entry.getKey()).append(": ").append(entry.getValue()).append("\r\n");
+            }
+        }
+        if (formData != null && formData.size() != 0) {
+            sb.append("From Data:\r\n");
+            for (NameValuePair pair : formData) {
+                sb.append(pair.getName()).append(": ").append(pair.getValue()).append("\r\n");
+            }
+        }
+        if (jsonPayload != null) {
+            sb.append("jsonPayload: \r\n").append(jsonPayload).append("\r\n");
+        }
+        return sb.toString();
     }
 
-    public Spider(Processer processer, int threadNum) {
-        this.processer = processer;
-        setThreadNum(threadNum);
-        init();
+    public int hashcode() {
+        return this.url.hashCode() + this.getMethod().hashCode() + this.getFormData().hashCode() + this.getHeaders().hashCode() + this.getJsonPayload().hashCode() + this.getQueryStringMap().hashCode();
     }
 
-    public Spider(Processer processer) {
-        this.processer = processer;
-        init();
-    }
-
-
-    private void init() {
-//        scheduler = new QueueScheduler();
-        if (service != null && !service.isShutdown()) {
-            this.pool = new CountableThreadPool(threadNum, service);
+    public boolean equals(Object request) {
+        boolean flag = false;
+        Request temp = null;
+        if (request instanceof Request) {
+            temp = (Request) request;
         } else {
-            this.pool = new CountableThreadPool(threadNum);
-            service = pool.getService();
+            return false;
         }
-        if (downloader == null) {
-            downloader = new Downloader(client);
+        if (this.url.equals(temp.getUrl()) && this.getMethod().equals(temp.getMethod())) {
+            if (this.jsonPayload.equals(temp.getJsonPayload()) && this.getFormData() == temp.getFormData() && this.getQueryStringMap().equals(temp.getQueryStringMap())) {
+                flag = true;
+            }
         }
-        if (downloader.getClient() == null) {
-            downloader.setClient(CrawlerLib.getInstanceClient());
-        }
-        downloader.setDelayTime(delayTime);
-        downloader.setAutoSwitchProxy(isNeedProxy);
+        return flag;
     }
 
-    /**
-     * 自动从response中取到符合标准的种子url加入scheduler
-     *
-     * @param response 从response中解析出符合规则的request
-     */
-    private List<Request> getRequestFromResponse(Response response) {
-        List<Request> resultList = new ArrayList<>();
-        addRequestFromRegex(resultList, response);
-        addRequestFromSelector(resultList, response);
-        return resultList;
+
+    private Request() {
+        headers.put(HttpConstant.Header.USER_AGENT,
+                "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.101 Safari/537.36");
     }
 
-    /**
-     * 从response中根据selector生成request
-     *
-     * @param collection 将生成的request传入此collection
-     */
-    private void addRequestFromSelector(Collection<Request> collection, Response response) {
-        Html html = new Html(response.getContent());
-        this.selectorMap.values().forEach(p -> {
-            String[] split = p.split(" ");
-            List<String> parse = html.parse(split[0], split[1]);
-            parse.forEach(v -> {
-                Request generated = generateRequest(v, response.getRequest());
-                collection.add(generated);
-            });
-        });
+    public Request(String url) {
+        this();
+        if (!url.startsWith("http")) {
+            setUrl("http://" + url);
+        } else {
+            setUrl(url);
+        }
     }
 
-    /**
-     * 从response中根据selector生成request
-     *
-     * @param collection 将生成的request传入此collection
-     */
-    private void addRequestFromRegex(Collection<Request> collection, Response response) {
-        for (String urlRegex : this.regexMap.values()) {
-            Pattern pattern = Pattern.compile(urlRegex);
-            Matcher matcher = pattern.matcher(response.getContent());
-            Request request = response.getRequest();
-            while (matcher.find()) {
-                String seed = matcher.group();
-                Request generated = generateRequest(seed, request);
-                collection.add(generated);
+    public Request(Map<String, String> queryString) {
+        this();
+        if (queryStringMap != null) {
+            boolean flag = true;
+            Set<Entry<String, String>> set = queryStringMap.entrySet();
+            for (Entry<String, String> entry : set) {
+                if (flag) {
+                    url += ("?" + entry.getKey() + "=" + entry.getValue());
+                    flag = false;
+                } else {
+                    url += ("&" + entry.getKey() + "=" + entry.getValue());
+                }
             }
         }
     }
 
-    private Request generateRequest(String seed, Request template) {
-        if (!seed.startsWith("http") || seed.length() < 10) {
-            String url = template.getUrl();
-            int ii = url.indexOf("/", 10);
-            seed = url.substring(0, ii + 1) + seed;//针对无host的情况
-        }
-        Request newRequest = null;
-        try {
-            newRequest = (Request) template.deepClone();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        if (newRequest != null) {
-            newRequest.setUrl(seed);
-        }
-        return newRequest;
+
+    public void addHeader(String name, String value) {
+        headers.put(name, value);
     }
 
-    public Spider addRequest(Request... requests) {
-        for (Request req : requests) {
-            scheduler.push(req);
-        }
-        return this;
+    public void addFormData(String name, String value) {
+        this.formData.add(new BasicNameValuePair(name, value));
     }
 
-    public Spider addRegex(String tag, String regex) {
-        this.regexMap.put(tag, regex);
-        return this;
+    public List<BasicNameValuePair> getFormData() {
+        return formData;
     }
 
-    public Spider addRequest(Collection<Request> collection) {
-        if (collection == null || collection.size() == 0) return this;
-        collection.forEach(this::addRequest);
-        return this;
+    public void setFormData(List<BasicNameValuePair> formData) {
+        this.formData.addAll(formData);
     }
 
-    private void processRequst(Request request) {
-        if (request.isNeedRecycle()) {
-            retryRequestCounter.decrementAndGet();
-        }
-        if (StringUtils.isEmpty(request.getUrl())) {
-            return;
-        }
-        Response response = downloader.process(request);
-        if (request.isNeedRecycle() && request.getRetryTimes() < maxRetryTimes) {
-            int retryTimes = request.getRetryTimes();
-            request.addRetryTimes();
-            if (retryRequestCounter.get() < 20) {
-                scheduler.push(request);
-                retryRequestCounter.incrementAndGet();
-            }//一旦队列里面超过20个需重试的url便忽略
-        }
-        processer.processResponse(response);
-        if (isAutoAddRequest && !regexMap.isEmpty()) {
-            List<Request> requests = getRequestFromResponse(response);
-            addRequest(requests);
-            processer.addRequests(scheduler, response);
-        }
-        if (processer.isNeedRetry(response)) {
-            request.setNeedRecycle(true);
-            request.addRetryTimes();
-            scheduler.push(request);
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map<String, String> headers) {
+        this.headers.putAll(headers);
+    }
+
+    public String getCharset() {
+        return charset;
+    }
+
+    public void setCharset(String charset) {
+        this.charset = charset;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url, boolean append) {
+        if (append) {
+            this.url = url + this.url;
+        } else {
+            this.url = url;
         }
     }
 
+    public void setUrl(String url) {
+        setUrl(url, false);
+    }
 
-    @Override
-    public void run() {
-//        init();
-        processer.preprocess(this.downloader);
-        setStartTime(new Date());
-        logger.info("准备开始工作！");
-        beforeRun();
-        while (!Thread.currentThread().isInterrupted() && !stop) {
-            Request request = scheduler.poll();
-            logger.info("scheduler size: " + scheduler.getSchedulerSize());
-            if (request == null) {
-                long a = System.currentTimeMillis();
-                waitNewUrl();
-                long b = System.currentTimeMillis();
-                if (scheduler.getSchedulerSize() <= 1 && pool.getRunningThreads().get() < 1) {
-                    break;//执行完任务自动终结
-                }
+    public String getJsonPayload() {
+        return jsonPayload;
+    }
+
+    public void setJsonPayload(String jsonPayload) {
+        this.jsonPayload = jsonPayload;
+    }
+
+    public Map<String, String> getQueryStringMap() {
+        return queryStringMap;
+    }
+
+    public void setQueryStringMap(Map<String, String> queryStringMap) {
+        this.queryStringMap.putAll(queryStringMap);
+        Set<Entry<String, String>> set = this.queryStringMap.entrySet();
+        StringBuilder sb = new StringBuilder();
+        boolean flag = true;
+        for (Entry<String, String> entry : set) {
+            if (flag) {
+                // url += ("?" + entry.getKey() + "=" + entry.getValue());
+                sb.append("?").append(entry.getKey()).append("=").append(entry.getValue());
+                flag = false;
             } else {
-                final Request requestFinal = request;
-                pool.execute(() -> {
-                    try {
-                        processRequst(requestFinal);
-                        logger.info("执行： " + requestFinal.getUrl());
-                    } catch (Exception e) {
-                        logger.info("执行： " + requestFinal.getUrl() + "失败！");
-                        logger.error(e.getMessage());
-                    } finally {
-                        pageCount.incrementAndGet();
-                        signalNewUrl();
-                    }
-                });
+                // url += ("&" + entry.getKey() + "=" + entry.getValue());
+                sb.append("&").append(entry.getKey()).append("=").append(entry.getValue());
             }
         }
-        logger.info("爬虫正在关闭！");
-        logger.info("共执行任务数: " + pageCount);
-        logger.info("还未完成的任务数: " + scheduler.getSchedulerSize());
-        long spendTime = System.currentTimeMillis() - getStartTime().getTime();
-        spendTime /= 1000;
-        logger.info("总计耗时： " + (int) spendTime / 3600 + "小时 " + (int) spendTime / 60 % 60 + "分 " + (int) (spendTime % 60) + "秒");
-        afterRun();
+        setUrl(url + sb.toString());
     }
 
-    public int getThreadNum() {
-        return threadNum;
-    }
-
-    private void waitNewUrl() {
-        newUrlLock.lock();
-        try {
-            //double check
-            sleep(emptySleepTime);
-            newUrlCondition.await(emptySleepTime, TimeUnit.SECONDS);
-//            if (pool.getRunningThreads().get() == 0) {
-//                return;
-//            }
-        } catch (InterruptedException e) {
-            logger.info("等待新url时中断错误");
-            e.printStackTrace();
-        } finally {
-            newUrlLock.unlock();
-        }
-    }
-
-    public void stop() {
-        this.stop = true;
-    }
-
-    public void start() {
-        this.stop = false;
-        this.run();
-    }
-
-    private void beforeRun() {
-        if (this.scheduler instanceof QueueScheduler) {
-            File file = new File("unfinish.txt");
-            if (file.exists()) {
-                try {
-                    List<String> strings = Files.readLines(file, Charset.forName("utf-8"));
-                    Gson gson = new Gson();
-                    strings.forEach(p -> {
-                        Request request = gson.fromJson(p, Request.class);
-                        scheduler.push(request);
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        } else if (this.scheduler instanceof RedisAbstractScheduler) {
-            RedisAbstractScheduler absScheduler = (RedisAbstractScheduler) scheduler;
-            String requestQueue = absScheduler.getRequestQueue();
-            String unfinish = requestQueue + "_unfinish";
-            try (Jedis jedis = absScheduler.getPool().getResource()) {
-                if (jedis.exists(unfinish)) {
-                    jedis.sunionstore(requestQueue, requestQueue, unfinish);
-                }
-            }
-
-        }
-
-    }
-
-    private void afterRun() {
-        logger.info("spider 将在1分钟内关闭");
-        if (scheduler instanceof QueueScheduler && scheduler.getSchedulerSize() != 0) {
-            ((QueueScheduler) scheduler).toFile("unfinish.txt");
-        }
-//        if (scheduler instanceof RedisAbstractScheduler && scheduler.getSchedulerSize() != 0) {
-//            RedisAbstractScheduler absScheduler = (RedisAbstractScheduler) scheduler;
-//            String unfinish = absScheduler.getRequestQueue() + "_unfinish";
-//            try (Jedis jedis = absScheduler.getPool().getResource()) {
-//                jedis.sunionstore(unfinish, absScheduler.getRequestQueue());
-//            }
-//        }
-        if (!service.isShutdown()) {
-            try {
-                boolean b = service.awaitTermination(1, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                logger.error(e.getMessage());
-            } finally {
-                List<Runnable> runnables = service.shutdownNow();
-                logger.info("被中断任务数: " + runnables.size());
-            }
-        }
-        logger.info("任务执行完毕,关闭service");
-    }
-
-    private void signalNewUrl() {
-        try {
-            newUrlLock.lock();
-            newUrlCondition.signalAll();
-        } finally {
-            newUrlLock.unlock();
-        }
-    }
-
-    private void sleep(long time) {
-        try {
-            Thread.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Spider setThreadNum(int threadNum) {
-        if (threadNum >= 1) {
-            this.threadNum = threadNum;
+    public void addQueryString(String name, String value) {
+        if (!getUrl().contains("?")) {
+            setUrl(url + String.format("?%s=%s", name, value));
         } else {
-            logger.info("线程数不能小于1，将以默认值运行");
+            setUrl(url + String.format("&%s=%s", name, value));
         }
-        return this;
     }
 
-    public ExecutorService getService() {
-        return service;
+    public boolean isNeedRecycle() {
+        return isNeedRecycle;
     }
 
-    public void setService(ExecutorService service) {
-        this.service = service;
-        init();
+    public void setNeedRecycle(boolean b) {
+        this.isNeedRecycle = b;
     }
 
-
-    public CountableThreadPool getPool() {
-        return pool;
+    public long getSleepTime() {
+        return sleepTime;
     }
 
-    public void setPool(CountableThreadPool pool) {
-        this.pool = pool;
+    public void setSleepTime(long sleepTimeMills) {
+        this.sleepTime = sleepTimeMills;
     }
 
-    public Processer getProcesser() {
-        return processer;
+    public int getRetryTimes() {
+        return retryTimes;
     }
 
-    public void setProcesser(Processer processer) {
-        this.processer = processer;
+    public void setRetryTimes(int retryTimes) {
+        this.retryTimes = retryTimes;
     }
 
-
-    public HttpClient getClient() {
-        return client;
+    public void addRetryTimes() {
+        this.retryTimes++;
     }
 
-    public Spider setClient(CloseableHttpClient client) {
-        this.client = client;
-        return this;
+    public int getTimeout() {
+        return timeout;
     }
 
-    public long getDelayTime() {
-        return delayTime;
+    public void setTimeout(int timeoutMills) {
+        this.timeout = timeoutMills;
     }
 
-    public Spider setDelayTime(long delayTime) {
-        this.delayTime = delayTime;
-        return this;
+    public HttpHost getProxy() {
+        return proxy;
     }
 
-    public int getMaxRetryTimes() {
-        return maxRetryTimes;
+    public void setProxy(HttpHost proxy) {
+        this.proxy = proxy;
     }
 
-    public Spider setMaxRetryTimes(int maxRetryTimes) {
-        this.maxRetryTimes = maxRetryTimes;
-        return this;
+    public boolean isAllowRedirect() {
+        return isAllowRedirect;
     }
 
-    public Scheduler getScheduler() {
-        return scheduler;
+    public void setAllowRedirect(boolean allowRedirect) {
+        isAllowRedirect = allowRedirect;
     }
 
-    public Spider setScheduler(Scheduler scheduler) {
-        this.scheduler = scheduler;
-        return this;
+    public String getTag() {
+        return tag;
     }
 
-    public boolean isNeedProxy() {
-        return isNeedProxy;
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 
-    public Spider setNeedProxy(boolean needProxy) {
-        isNeedProxy = needProxy;
-        this.downloader.setAutoSwitchProxy(needProxy);
-        return this;
+    public String getProjectName() {
+        return projectName;
     }
 
-    public CookieStore getStore() {
-        return store;
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
-    public void setStore(CookieStore store) {
-        this.store = store;
+    public String toJson() {
+        return gson.toJson(this);
     }
-
-    public AtomicLong getPageCount() {
-        return pageCount;
-    }
-
-    public void setPageCount(AtomicLong pageCount) {
-        this.pageCount = pageCount;
-    }
-
-    public ReentrantLock getNewUrlLock() {
-        return newUrlLock;
-    }
-
-    public void setNewUrlLock(ReentrantLock newUrlLock) {
-        this.newUrlLock = newUrlLock;
-    }
-
-    public Condition getNewUrlCondition() {
-        return newUrlCondition;
-    }
-
-    public void setNewUrlCondition(Condition newUrlCondition) {
-        this.newUrlCondition = newUrlCondition;
-    }
-
-    public int getEmptySleepTime() {
-        return emptySleepTime;
-    }
-
-    public void setEmptySleepTime(int emptySleepTime) {
-        this.emptySleepTime = emptySleepTime;
-    }
-
-    public Downloader getDownloader() {
-        return downloader;
-    }
-
-    public void setDownloader(Downloader downloader) {
-        this.downloader = downloader;
-    }
-
-    public Date getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
-    }
-
-    public boolean isAutoAddRequest() {
-        return isAutoAddRequest;
-    }
-
-    public Spider setAutoAddRequest(boolean autoAddRequest) {
-        isAutoAddRequest = autoAddRequest;
-        return this;
-    }
-
-    public String getSeedUrlRegex() {
-        return seedUrlRegex;
-    }
-
-    public Spider setSeedUrlRegex(String seedUrlRegex) {
-        this.seedUrlRegex = seedUrlRegex;
-        return this;
-    }
-
-    public AtomicInteger getRetryRequestCounter() {
-        return retryRequestCounter;
-    }
-
-    public void setRetryRequestCounter(AtomicInteger retryRequestCounter) {
-        this.retryRequestCounter = retryRequestCounter;
-    }
-
-    public boolean isStop() {
-        return stop;
-    }
-
-    public ConcurrentHashMap<String, String> getRegexMap() {
-        return regexMap;
-    }
-
-    public ConcurrentHashMap<String, String> getSelectorMap() {
-        return selectorMap;
-    }
-
 }
